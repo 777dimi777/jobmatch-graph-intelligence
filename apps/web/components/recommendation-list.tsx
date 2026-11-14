@@ -1,6 +1,37 @@
 'use client';
+
+import { AlertTriangle, Building2, CheckCircle2, MapPin, RefreshCw, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { browserApiBase } from '../lib/api';
-const base=browserApiBase;
-type Recommendation={job:{id:string;title:string;level:string;workMode:string;salaryMin:number;salaryMax:number};company:{name:string};location:{name:string}|null;score:number;matchedWeight:number;totalWeight:number;missingMandatory:number;missingSkills:string[];matchedSkills:string[]};
-export function RecommendationList(){const[id,setId]=useState('candidate-1');const[include,setInclude]=useState(false);const[data,setData]=useState<Recommendation[]>([]);const[error,setError]=useState('');const load=async()=>{try{const response=await fetch(`${base}/recommendations/${encodeURIComponent(id)}?includeUnqualified=${include}`);if(!response.ok)throw new Error((await response.json()).message);setData(await response.json());setError('');}catch(cause){setError(cause instanceof Error?cause.message:'Greska');}};useEffect(()=>{void load();},[include]);return <><div className="filters"><input value={id} onChange={e=>setId(e.target.value)} aria-label="ID kandidata"/><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={include} onChange={e=>setInclude(e.target.checked)}/>Prikazi i nekvalifikovane</label><button className="button primary" onClick={()=>void load()}>Izracunaj preporuke</button></div>{error&&<p className="error">{error}</p>}{data.map(item=><article className="card p-4 mb-3" key={item.job.id}><div className="flex gap-3 items-start"><div className="flex-1"><h3 className="m-0 text-base">{item.job.title}</h3><p className="muted text-sm mt-1">{item.company.name} · {item.location?.name??'bez lokacije'} · {item.job.workMode}</p><p className="text-sm mb-0">Poklopljena tezina: {item.matchedWeight}/{item.totalWeight}. {item.missingSkills.length ? <>Nedostaju: <b>{item.missingSkills.join(', ')}</b></> : 'Sve trazene vestine su poklopljene.'}</p></div><span className={`score ${item.missingMandatory?'warn':''}`}>{item.score}%</span></div></article>)}{!error&&!data.length&&<div className="empty">Nema preporuka za izabrani ID kandidata.</div>}</>}
+
+type Recommendation = { job: { id: string; title: string; level: string; workMode: string; salaryMin: number; salaryMax: number }; company: { name: string }; location: { name: string } | null; score: number; matchedWeight: number; totalWeight: number; missingMandatory: number; missingSkills: string[]; matchedSkills: string[] };
+
+export function RecommendationList() {
+  const [id, setId] = useState('candidate-1');
+  const [include, setInclude] = useState(false);
+  const [data, setData] = useState<Recommendation[]>([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const load = async () => {
+    setLoading(true); setError('');
+    try {
+      const response = await fetch(`${browserApiBase}/recommendations/${encodeURIComponent(id)}?includeUnqualified=${include}`);
+      const payload = await response.json().catch(() => null) as unknown;
+      if (!response.ok) throw new Error(typeof payload === 'object' && payload && 'message' in payload ? String(payload.message) : 'Preporuke nisu dostupne.');
+      setData(payload as Recommendation[]);
+    } catch (cause) { setData([]); setError(cause instanceof Error ? cause.message : 'Preporuke nisu dostupne.'); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { void load(); }, [include]);
+
+  return <div>
+    <div className="recommendation-intro"><Sparkles size={21}/><div><b>Objašnjive preporuke</b><span>Skor poredi kandidatove veštine sa ponderisanim zahtevima posla; ne predstavlja verovatnoću zaposlenja.</span></div></div>
+    <div className="filters recommendation-controls"><label><small>ID kandidata</small><input value={id} onChange={(event) => setId(event.target.value)} aria-label="ID kandidata"/></label><label className="check-control"><input type="checkbox" checked={include} onChange={(event) => setInclude(event.target.checked)}/>Prikaži i oglase sa obaveznim nedostacima</label><button className="button primary" disabled={loading} onClick={() => void load()}>{loading ? 'Računanje…' : 'Izračunaj preporuke'}</button></div>
+    {error && <div className="error graph-error"><span>{error}</span><button className="button" onClick={() => void load()}><RefreshCw size={15}/> Pokušaj ponovo</button></div>}
+    {loading && <div className="recommendation-loading">Računam poklapanje veština sa aktivnim oglasima…</div>}
+    {!loading && data.map((item, index) => <article className="recommendation-card" key={item.job.id}><div className="recommendation-rank">#{index + 1}</div><div className="recommendation-main"><div className="recommendation-heading"><div><h3>{item.job.title}</h3><p><Building2 size={14}/>{item.company.name}<span>•</span><MapPin size={14}/>{item.location?.name ?? 'Lokacija nije navedena'}<span>•</span>{item.job.workMode}</p></div><div className={`recommendation-score ${item.missingMandatory ? 'warning' : ''}`}><b>{item.score}%</b><small>poklapanje</small></div></div><div className="recommendation-meta"><span>{item.job.level}</span><span>{item.job.salaryMin.toLocaleString('sr-RS')}–{item.job.salaryMax.toLocaleString('sr-RS')} €</span><span>{item.matchedWeight}/{item.totalWeight} ponderisanih poena</span></div><div className="skill-columns"><div><b><CheckCircle2 size={15}/> Poklopljeno</b><p>{item.matchedSkills.length ? item.matchedSkills.join(' · ') : 'Nema registrovanih poklapanja'}</p></div><div className={item.missingSkills.length ? 'missing' : ''}><b>{item.missingSkills.length ? <AlertTriangle size={15}/> : <CheckCircle2 size={15}/>} {item.missingSkills.length ? 'Nedostaje' : 'Svi zahtevi pokriveni'}</b><p>{item.missingSkills.length ? item.missingSkills.join(' · ') : 'Kandidat poseduje sve potrebne veštine.'}</p></div></div></div></article>)}
+    {!loading && !error && !data.length && <div className="empty"><div className="empty-icon"><Sparkles size={22}/></div><b>Nema preporuka za ovaj profil</b><p>Proveri ID kandidata ili uključi oglase sa nedostajućim obaveznim veštinama.</p></div>}
+  </div>;
+}
