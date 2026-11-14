@@ -1,3 +1,4 @@
-const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
+const baseUrl = process.env.API_INTERNAL_URL ?? 'http://localhost:3001/api';
+export const browserApiBase = process.env.NEXT_PUBLIC_API_URL ?? '/_backend';
 export async function api<T>(path: string): Promise<T> { try { const response = await fetch(`${baseUrl}${path}`, { cache: 'no-store' }); if (!response.ok) throw new Error((await response.json().catch(() => null))?.message ?? `API greska (${response.status})`); return response.json() as Promise<T>; } catch (error) { if (error instanceof Error && error.message.startsWith('API greska')) throw error; if (error instanceof Error && !/fetch failed/i.test(error.message)) throw error; throw new Error('API nije dostupan. Pokrenite backend sa npm run dev.'); } }
 export function formatNumber(value: number): string { return new Intl.NumberFormat('sr-RS').format(value); }

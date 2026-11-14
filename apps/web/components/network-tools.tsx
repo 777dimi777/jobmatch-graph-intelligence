@@ -1,4 +1,5 @@
 'use client';
 import { useState } from 'react';
-const base=process.env.NEXT_PUBLIC_API_URL??'http://localhost:3001/api';
+import { browserApiBase } from '../lib/api';
+const base=browserApiBase;
 export function NetworkTools(){const[from,setFrom]=useState('candidate-1');const[to,setTo]=useState('candidate-20');const[result,setResult]=useState<{nodes:{name:string}[];distance:number}[]|null>(null);const[error,setError]=useState('');const find=async()=>{try{const r=await fetch(`${base}/graph/shortest-path?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);if(!r.ok)throw new Error((await r.json()).message);setResult(await r.json());setError('');}catch(cause){setError(cause instanceof Error?cause.message:'Greska');}};return <article className="card panel-body"><h3 className="mt-0">Najkraca putanja kroz KNOWS mrezu</h3><div className="filters"><input value={from} onChange={e=>setFrom(e.target.value)}/><input value={to} onChange={e=>setTo(e.target.value)}/><button className="button primary" onClick={()=>void find()}>Pronadji putanju</button></div>{error&&<p className="error">{error}</p>}{result?.[0]&&<p><b>{result[0].distance} koraka:</b> {result[0].nodes.map(node=>node.name).join(' → ')}</p>}{result&&!result[0]&&<p className="muted">Nema putanje u ogranicenju od sest koraka.</p>}</article>}
