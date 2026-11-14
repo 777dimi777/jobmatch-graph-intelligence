@@ -1,0 +1,10 @@
+node_modules
+.next
+dist
+coverage
+.env
+neo4j/data
+neo4j/logs
+neo4j/plugins
+apps/api/benchmarks/*.json
+*.log

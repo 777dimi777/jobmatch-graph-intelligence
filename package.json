@@ -1,0 +1,19 @@
+{
+  "name": "jobmatch-graph-intelligence",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w @jobmatch/api\" \"npm run dev -w @jobmatch/web\"",
+    "build": "npm run build -w @jobmatch/api && npm run build -w @jobmatch/web",
+    "lint": "npm run lint -w @jobmatch/api && npm run lint -w @jobmatch/web",
+    "test": "npm run test -w @jobmatch/api",
+    "seed:small": "npm run seed -w @jobmatch/api -- small",
+    "seed:medium": "npm run seed -w @jobmatch/api -- medium",
+    "seed:large": "npm run seed -w @jobmatch/api -- large",
+    "benchmark": "npm run benchmark -w @jobmatch/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

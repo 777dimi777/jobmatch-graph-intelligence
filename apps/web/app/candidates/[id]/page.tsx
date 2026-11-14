@@ -1,0 +1,11 @@
+import Link from 'next/link';
+import { api } from '../../../lib/api';
+
+type Candidate = { id:string; name:string; email:string; title:string; experienceYears:number; bio:string; location?:{name:string;country:string}|null; company?:{name:string}|null; skills:{id:string;name:string;category:string;level:number;yearsOfExperience:number}[]; certifications:{id:string;name:string;issuer:string}[] };
+
+export default async function CandidateDetail({ params }: { params: Promise<{ id:string }> }) {
+  const { id } = await params;
+  let candidate: Candidate | null = null; let error = '';
+  try { candidate = await api<Candidate>(`/candidates/${id}`); } catch (cause) { error = cause instanceof Error ? cause.message : 'Kandidat nije dostupan'; }
+  return <div className="content"><Link className="back-link" href="/candidates">← Nazad na kandidate</Link>{error && <p className="error mt-4">{error}</p>}{candidate && <><div className="page-header mt-4"><div><h2>{candidate.name}</h2><p>{candidate.title} · {candidate.experienceYears} godina iskustva · {candidate.location?.name ?? 'Lokacija nije uneta'}</p></div></div><div className="two-col"><article className="card panel-body"><h3 className="mt-0">Profil</h3><dl className="detail"><dt>Email</dt><dd>{candidate.email}</dd><dt>Kompanija</dt><dd>{candidate.company?.name ?? 'Nije uneta'}</dd><dt>Bio</dt><dd>{candidate.bio || 'Nema opisa.'}</dd></dl></article><article className="card panel-body"><h3 className="mt-0">Sertifikati</h3>{candidate.certifications.length ? <div className="tag-list">{candidate.certifications.map(certification => <span className="tag" key={certification.id}>{certification.name}<small>{certification.issuer}</small></span>)}</div> : <p className="muted">Nema sertifikata.</p>}</article></div><article className="card panel-body mt-5"><h3 className="mt-0">Vestine kroz HAS_SKILL veze</h3><table className="table"><thead><tr><th>Vestina</th><th>Kategorija</th><th>Nivo</th><th>Godine iskustva</th></tr></thead><tbody>{candidate.skills.filter(Boolean).map(skill => <tr key={skill.id}><td><b>{skill.name}</b></td><td>{skill.category}</td><td>{skill.level}/5</td><td>{skill.yearsOfExperience}</td></tr>)}</tbody></table></article></>}</div>;
+}

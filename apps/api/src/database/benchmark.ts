@@ -1,0 +1,7 @@
+import { config } from 'dotenv';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { Neo4jService } from './neo4j.service';
+config({ path: '../../.env' });
+const cases = [{ id: 'candidateById', query: 'MATCH (candidate:Candidate {id:$candidateId}) RETURN candidate', params: { candidateId: 'candidate-1' } }, { id: 'candidateBySkill', query: 'MATCH (skill:Skill {name:$skillName})<-[:HAS_SKILL]-(candidate:Candidate) RETURN candidate LIMIT 100', params: { skillName: 'React' } }, { id: 'shortestPath', query: 'MATCH (a:Candidate {id:$from}), (b:Candidate {id:$to}) MATCH path=shortestPath((a)-[:KNOWS*..6]-(b)) RETURN path', params: { from: 'candidate-1', to: 'candidate-20' } }, { id: 'topSkills', query: 'MATCH (:Job {active:true})-[:REQUIRES_SKILL]->(skill:Skill) RETURN skill.name, count(*) AS demand ORDER BY demand DESC LIMIT 10', params: {} }];
+const db = new Neo4jService();
+void (async () => { const results = []; for (const item of cases) { const measurement = await db.profile(item.query, item.params); results.push({ id: item.id, measuredAt: new Date().toISOString(), elapsedMs: measurement.elapsedMs, resultCount: measurement.rows.length, plan: measurement.plan }); } await mkdir('benchmarks', { recursive: true }); await writeFile('benchmarks/latest.json', JSON.stringify(results, null, 2)); console.log('Stvarni benchmark rezultati sacuvani su u benchmarks/latest.json'); })().finally(async () => db.onModuleDestroy());

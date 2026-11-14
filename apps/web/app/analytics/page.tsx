@@ -1,0 +1,11 @@
+import { api } from '../../lib/api';
+import { DemandChart } from '../../components/demand-chart';
+
+type Similar = { candidate:{name:string;title:string}; similarCandidate:{name:string;title:string}; similarity:number; commonSkills:string[] };
+type Community = { communityId:number; members:number };
+
+export default async function AnalyticsPage() {
+  let skills:{name:string;demand:number}[]=[]; let similar:Similar[]=[]; let communities:Community[]=[]; let error='';
+  try { [skills,similar,communities]=await Promise.all([api<{name:string;demand:number}[]>('/analytics/skills'),api<Similar[]>('/analytics/similar-candidates'),api<Community[]>('/analytics/communities')]); } catch (cause) { error=cause instanceof Error?cause.message:'Greska pri ucitavanju'; }
+  return <div className="content"><div className="page-header"><div><h2>Analitika</h2><p>Agregacije i algoritmi se izvrsavaju nad stvarnim Neo4j grafom.</p></div></div>{error&&<p className="error">{error}</p>}<div className="two-col"><article className="card"><div className="panel-title">Najtrazenije vestine</div><div className="panel-body"><DemandChart data={skills}/></div></article><article className="card"><div className="panel-title">Slicni kandidati (Jaccard)</div><div className="panel-body"><table className="table"><thead><tr><th>Kandidat</th><th>Slican kandidat</th><th>Skor</th></tr></thead><tbody>{similar.slice(0,8).map((item,index)=><tr key={index}><td>{item.candidate.name}</td><td>{item.similarCandidate.name}</td><td>{Math.round(item.similarity*100)}%</td></tr>)}</tbody></table>{!similar.length&&<div className="empty">Nema rezultata.</div>}</div></article></div><article className="card panel-body mt-5"><h3 className="mt-0">Louvain zajednice profesionalne mreze</h3><p className="muted">GDS projektuje Candidate + KNOWS podgraf, izracunava Louvain zajednice i zatim brise privremenu projekciju.</p><table className="table"><thead><tr><th>Community ID</th><th>Broj kandidata</th><th>Tumacenje</th></tr></thead><tbody>{communities.map(community=><tr key={community.communityId}><td>{community.communityId}</td><td>{community.members}</td><td>Gusto povezana grupa u profesionalnoj mrezi</td></tr>)}</tbody></table>{!communities.length&&<div className="empty">GDS rezultat trenutno nije dostupan.</div>}</article></div>;
+}

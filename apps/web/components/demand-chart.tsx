@@ -1,0 +1,3 @@
+'use client';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+export function DemandChart({ data }: { data: { name: string; demand: number }[] }) { return <div style={{height:250}}>{data.length ? <ResponsiveContainer width="100%" height="100%"><BarChart data={data} layout="vertical" margin={{ left: 10 }}><XAxis type="number" hide/><YAxis type="category" dataKey="name" width={110} tick={{fontSize:12}}/><Tooltip/><Bar dataKey="demand" fill="#3b82f6" radius={[0,4,4,0]}/></BarChart></ResponsiveContainer> : <div className="empty">Nema podataka nakon seedovanja.</div>}</div>; }
