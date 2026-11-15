@@ -8,3 +8,4 @@ neo4j/logs
 neo4j/plugins
 apps/api/benchmarks/*.json
 *.log
+*.tsbuildinfo

@@ -1,6 +1,6 @@
 import { Neo4jService } from './neo4j.service';
 
-const constraints = ['Candidate', 'Skill', 'Job', 'Company', 'Location', 'Industry', 'Certification'].map((label) => `CREATE CONSTRAINT ${label.toLowerCase()}_id_unique IF NOT EXISTS FOR (n:${label}) REQUIRE n.id IS UNIQUE`);
+const constraints = ['Candidate', 'Skill', 'Job', 'Company', 'Location', 'Industry', 'Certification', 'Notification'].map((label) => `CREATE CONSTRAINT ${label.toLowerCase()}_id_unique IF NOT EXISTS FOR (n:${label}) REQUIRE n.id IS UNIQUE`);
 const indexes = [
   'CREATE INDEX candidate_name IF NOT EXISTS FOR (n:Candidate) ON (n.name)',
   'CREATE INDEX candidate_email IF NOT EXISTS FOR (n:Candidate) ON (n.email)',

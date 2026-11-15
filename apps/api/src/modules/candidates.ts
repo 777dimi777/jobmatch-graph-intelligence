@@ -29,6 +29,7 @@ export class CandidatesController {
 export class CandidatesService {
   constructor(private readonly db: Neo4jService) {}
   async list(search: string, limit: number) {
+    if (search.trim().length < 2) return [];
     return this.db.read(`MATCH (c:Candidate) WHERE toLower(c.name) CONTAINS toLower($search) OR toLower(c.title) CONTAINS toLower($search)
       OPTIONAL MATCH (c)-[:HAS_SKILL]->(s:Skill)
       WITH c, count(s) AS skillCount

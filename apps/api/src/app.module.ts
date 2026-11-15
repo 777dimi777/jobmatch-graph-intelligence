@@ -9,9 +9,10 @@ import { QueriesController, QueriesService } from './modules/queries';
 import { RecommendationsController, RecommendationsService } from './modules/recommendations';
 import { SkillsController, SkillsService } from './modules/skills';
 import { Neo4jService } from './database/neo4j.service';
+import { ApplicationsController, EngagementService, NotificationsController, SearchController } from './modules/engagement';
 
 @Module({
-  controllers: [CandidatesController, SkillsController, JobsController, CompaniesController, GraphController, RecommendationsController, AnalyticsController, QueriesController, PerformanceController],
-  providers: [Neo4jService, CandidatesService, SkillsService, JobsService, CompaniesService, GraphService, RecommendationsService, AnalyticsService, QueriesService, PerformanceService]
+  controllers: [CandidatesController, SkillsController, JobsController, CompaniesController, GraphController, RecommendationsController, AnalyticsController, QueriesController, PerformanceController, ApplicationsController, NotificationsController, SearchController],
+  providers: [Neo4jService, CandidatesService, SkillsService, JobsService, CompaniesService, GraphService, RecommendationsService, AnalyticsService, QueriesService, PerformanceService, EngagementService]
 })
 export class AppModule {}

@@ -11,7 +11,7 @@ export class JobsController { constructor(@Inject(forwardRef(() => JobsService))
 @Injectable()
 export class JobsService {
   constructor(private readonly db: Neo4jService) {}
-  list(search: string, active: boolean) { return this.db.read(`MATCH (j:Job {active:$active})-[:POSTED_BY]->(c:Company) OPTIONAL MATCH (j)-[:LOCATED_IN]->(l:Location) OPTIONAL MATCH (j)-[:REQUIRES_SKILL]->(s:Skill)
+  list(search: string, active: boolean) { if (search.trim().length < 2) return Promise.resolve([]); return this.db.read(`MATCH (j:Job {active:$active})-[:POSTED_BY]->(c:Company) OPTIONAL MATCH (j)-[:LOCATED_IN]->(l:Location) OPTIONAL MATCH (j)-[:REQUIRES_SKILL]->(s:Skill)
     WHERE toLower(j.title) CONTAINS toLower($search)
     WITH j, c, head(collect(DISTINCT l { .id, .name })) AS location, count(DISTINCT s) AS skillCount
     RETURN j { .*, company: c { .id, .name }, location: location, skillCount: skillCount } AS job ORDER BY j.createdAt DESC`, { search, active }, (record) => record.get('job')); }

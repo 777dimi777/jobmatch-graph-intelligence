@@ -4,6 +4,7 @@ import CytoscapeComponent from 'react-cytoscapejs';
 import { Box, Network, RefreshCw, Route, Share2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { browserApiBase } from '../lib/api';
+import { EntityPreviewModal } from './entity-preview-modal';
 
 type Element = { data: Record<string, string | number | boolean> };
 type Graph = { nodes: Element[]; edges: Element[] };
@@ -13,6 +14,7 @@ export function GraphExplorer({ initialId = 'candidate-1' }: { initialId?: strin
   const [depth, setDepth] = useState('2');
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selected, setSelected] = useState<Record<string, unknown> | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +32,7 @@ export function GraphExplorer({ initialId = 'candidate-1' }: { initialId?: strin
   useEffect(() => { void load(); }, []);
 
   const style = useMemo(() => [
-    { selector: 'node', style: { label: 'data(label)', color: '#172033', 'text-valign': 'bottom', 'font-size': '10px', 'background-color': '#3b82f6', width: 42, height: 42 } },
+    { selector: 'node', style: { label: 'data(label)', color: '#172033', 'text-valign': 'bottom', 'text-wrap': 'wrap', 'text-max-width': '82px', 'text-margin-y': 7, 'font-size': '10px', 'background-color': '#3b82f6', width: 42, height: 42 } },
     { selector: 'node[id ^= "skill-"]', style: { 'background-color': '#8b5cf6' } },
     { selector: 'node[id ^= "job-"]', style: { 'background-color': '#f59e0b', shape: 'round-rectangle', width: 62 } },
     { selector: 'node[id ^= "company-"]', style: { 'background-color': '#10b981', shape: 'round-rectangle', width: 58 } },
@@ -43,9 +45,9 @@ export function GraphExplorer({ initialId = 'candidate-1' }: { initialId?: strin
     <div className="graph-insight"><span><Network size={16}/> Podgraf iz Neo4j baze</span>{graph && <><span><Box size={16}/> {graph.nodes.length} čvorova</span><span><Share2 size={16}/> {graph.edges.length} veza</span></>}</div>
     {error && <div className="error graph-error"><span>{error}</span><button className="button" onClick={() => void load()}><RefreshCw size={15}/> Pokušaj ponovo</button></div>}
     {loading && <div className="graph-loading">Učitavanje strukture grafa…</div>}
-    {graph && !loading && <CytoscapeComponent elements={[...graph.nodes, ...graph.edges]} stylesheet={style} className="cy" layout={{ name: 'cose', animate: false, padding: 35 }} cy={(cy) => cy.on('tap', 'node,edge', (event) => setSelected(event.target.data()))}/>} 
+    {graph && !loading && <CytoscapeComponent elements={[...graph.nodes, ...graph.edges]} stylesheet={style} className="cy" layout={{ name: 'cose', animate: false, padding: 35 }} cy={(cy) => cy.on('tap', 'node,edge', (event) => { const data = event.target.data() as Record<string, unknown>; setSelected(data); if (event.target.isNode()) setPreviewId(String(data.id)); })}/>} 
     {!graph && !error && !loading && <div className="empty">Unesi početni čvor i učitaj podgraf.</div>}
     <div className="legend mt-3"><span className="candidate">Kandidat</span><span className="skill">Veština</span><span className="job">Posao</span><span className="company">Kompanija</span></div>
-    {selected && <section className="selected-element"><div><Route size={17}/><b>Izabrani element grafa</b></div><pre className="detail">{JSON.stringify(selected, null, 2)}</pre></section>}
+    {selected && <section className="selected-element"><div><Route size={17}/><b>{'id' in selected ? 'Klikni čvor za brzi pregled' : 'Izabrana veza'}</b></div><pre className="detail">{JSON.stringify(selected, null, 2)}</pre></section>}<EntityPreviewModal id={previewId} onClose={() => setPreviewId(null)}/>
   </div>;
 }

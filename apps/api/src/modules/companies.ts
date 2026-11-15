@@ -9,6 +9,7 @@ export class CompaniesService {
   constructor(private readonly db: Neo4jService) {}
 
   list(search: string) {
+    if (search.trim().length < 2) return Promise.resolve([]);
     return this.db.read(`MATCH (c:Company) WHERE toLower(c.name) CONTAINS toLower($search)
       OPTIONAL MATCH (j:Job {active:true})-[:POSTED_BY]->(c)
       OPTIONAL MATCH (c)-[:BELONGS_TO]->(i:Industry)
