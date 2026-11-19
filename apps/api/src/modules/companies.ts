@@ -1,6 +1,7 @@
 import { Controller, forwardRef, Get, Injectable, Inject, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Neo4jService } from '../database/neo4j.service';
+import { hasSearchTerm } from './search-policy';
 interface CompaniesPort { list(search: string): Promise<unknown>; detail(id: string): Promise<unknown>; }
 @ApiTags('Companies') @Controller('companies')
 export class CompaniesController { constructor(@Inject(forwardRef(() => CompaniesService)) private readonly service: CompaniesPort) {} @Get() list(@Query('search') search = '') { return this.service.list(search); } @Get(':id') detail(@Param('id') id: string) { return this.service.detail(id); } }
@@ -9,7 +10,7 @@ export class CompaniesService {
   constructor(private readonly db: Neo4jService) {}
 
   list(search: string) {
-    if (search.trim().length < 2) return Promise.resolve([]);
+    if (!hasSearchTerm(search)) return Promise.resolve([]);
     return this.db.read(`MATCH (c:Company) WHERE toLower(c.name) CONTAINS toLower($search)
       OPTIONAL MATCH (j:Job {active:true})-[:POSTED_BY]->(c)
       OPTIONAL MATCH (c)-[:BELONGS_TO]->(i:Industry)

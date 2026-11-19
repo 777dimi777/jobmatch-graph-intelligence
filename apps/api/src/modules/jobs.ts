@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { IsBoolean, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { randomUUID } from 'node:crypto';
 import { Neo4jService, value } from '../database/neo4j.service';
+import { hasSearchTerm } from './search-policy';
 
 class JobInput { @IsString() title!: string; @IsString() description!: string; @IsString() level!: string; @IsInt() @Min(0) salaryMin!: number; @IsInt() @Min(0) salaryMax!: number; @IsString() workMode!: string; @IsBoolean() active!: boolean; @IsString() companyId!: string; @IsString() locationId!: string; @IsOptional() requiredSkills?: { skillId: string; mandatory: boolean; weight: number; minLevel: number }[]; }
 interface JobsPort { list(search: string, active: boolean): Promise<unknown>; detail(id: string): Promise<unknown>; create(input: JobInput): Promise<unknown>; }
@@ -11,7 +12,7 @@ export class JobsController { constructor(@Inject(forwardRef(() => JobsService))
 @Injectable()
 export class JobsService {
   constructor(private readonly db: Neo4jService) {}
-  list(search: string, active: boolean) { if (search.trim().length < 2) return Promise.resolve([]); return this.db.read(`MATCH (j:Job {active:$active})-[:POSTED_BY]->(c:Company) OPTIONAL MATCH (j)-[:LOCATED_IN]->(l:Location) OPTIONAL MATCH (j)-[:REQUIRES_SKILL]->(s:Skill)
+  list(search: string, active: boolean) { if (!hasSearchTerm(search)) return Promise.resolve([]); return this.db.read(`MATCH (j:Job {active:$active})-[:POSTED_BY]->(c:Company) OPTIONAL MATCH (j)-[:LOCATED_IN]->(l:Location) OPTIONAL MATCH (j)-[:REQUIRES_SKILL]->(s:Skill)
     WHERE toLower(j.title) CONTAINS toLower($search)
     WITH j, c, head(collect(DISTINCT l { .id, .name })) AS location, count(DISTINCT s) AS skillCount
     RETURN j { .*, company: c { .id, .name }, location: location, skillCount: skillCount } AS job ORDER BY j.createdAt DESC`, { search, active }, (record) => record.get('job')); }

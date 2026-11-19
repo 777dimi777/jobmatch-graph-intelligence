@@ -2,6 +2,7 @@ import { Body, Controller, forwardRef, Get, Injectable, Inject, NotFoundExceptio
 import { ApiTags } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 import { Neo4jService } from '../database/neo4j.service';
+import { hasSearchTerm } from './search-policy';
 
 class ApplyInput {
   @IsString() candidateId!: string;
@@ -79,7 +80,7 @@ export class EngagementService {
   }
 
   search(query: string) {
-    if (query.trim().length < 2) return Promise.resolve([]);
+    if (!hasSearchTerm(query)) return Promise.resolve([]);
     return this.db.read(`CALL {
       MATCH (candidate:Candidate) WHERE toLower(candidate.name) CONTAINS toLower($query) OR toLower(candidate.title) CONTAINS toLower($query)
       RETURN 'candidate' AS type, candidate.id AS id, candidate.name AS title, candidate.title AS subtitle LIMIT 5
