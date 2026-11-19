@@ -4,6 +4,7 @@ import { Bell, Pencil, Search, UserRound, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { browserApiBase } from '../lib/api';
 import { CURRENT_CANDIDATE_ID } from '../lib/current-candidate';
+import { isSearchReady } from '../lib/search-policy';
 import { EntityPreviewModal } from './entity-preview-modal';
 
 type SearchResult = { type: string; id: string; title: string; subtitle: string };
@@ -12,7 +13,7 @@ type Profile = { name: string; email: string; title: string; experienceYears: nu
 
 export function HeaderActions() {
   const [query, setQuery] = useState(''); const [results, setResults] = useState<SearchResult[]>([]); const [notifications, setNotifications] = useState<Notification[]>([]); const [notificationsOpen, setNotificationsOpen] = useState(false); const [profileOpen, setProfileOpen] = useState(false); const [profile, setProfile] = useState<Profile | null>(null); const [selected, setSelected] = useState<string | null>(null); const [saved, setSaved] = useState('');
-  useEffect(() => { if (query.trim().length < 2) { setResults([]); return; } const timer = setTimeout(() => { void fetch(`${browserApiBase}/search?q=${encodeURIComponent(query)}`).then((response) => response.json()).then(setResults).catch(() => setResults([])); }, 250); return () => clearTimeout(timer); }, [query]);
+  useEffect(() => { if (!isSearchReady(query)) { setResults([]); return; } const timer = setTimeout(() => { void fetch(`${browserApiBase}/search?q=${encodeURIComponent(query)}`).then((response) => response.json()).then(setResults).catch(() => setResults([])); }, 250); return () => clearTimeout(timer); }, [query]);
   const loadNotifications = async () => { const response = await fetch(`${browserApiBase}/notifications/${CURRENT_CANDIDATE_ID}`); if (response.ok) setNotifications(await response.json()); };
   const openNotifications = () => { setNotificationsOpen((open) => !open); void loadNotifications(); };
   const openProfile = async () => { setProfileOpen(true); setSaved(''); const response = await fetch(`${browserApiBase}/candidates/${CURRENT_CANDIDATE_ID}`); if (response.ok) { const candidate = await response.json() as Profile; setProfile({ name: candidate.name, email: candidate.email, title: candidate.title, experienceYears: candidate.experienceYears, bio: candidate.bio ?? '' }); } };
