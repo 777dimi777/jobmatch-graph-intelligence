@@ -4,12 +4,13 @@ import { AlertTriangle, Building2, CheckCircle2, MapPin, RefreshCw, Sparkles } f
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { browserApiBase } from '../lib/api';
+import { CURRENT_CANDIDATE_ID } from '../lib/current-candidate';
 import { ApplyButton } from './apply-button';
 
 type Recommendation = { job: { id: string; title: string; level: string; workMode: string; salaryMin: number; salaryMax: number }; company: { name: string }; location: { name: string } | null; score: number; matchedWeight: number; totalWeight: number; missingMandatory: number; missingSkills: string[]; matchedSkills: string[] };
 
 export function RecommendationList() {
-  const [id, setId] = useState('candidate-1');
+  const [id, setId] = useState(CURRENT_CANDIDATE_ID);
   const [include, setInclude] = useState(false);
   const [data, setData] = useState<Recommendation[]>([]);
   const [error, setError] = useState('');

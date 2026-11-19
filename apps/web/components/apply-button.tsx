@@ -3,13 +3,14 @@
 import { CheckCircle2, Send } from 'lucide-react';
 import { useState } from 'react';
 import { browserApiBase } from '../lib/api';
+import { CURRENT_CANDIDATE_ID } from '../lib/current-candidate';
 
 export function ApplyButton({ jobId, compact = false }: { jobId: string; compact?: boolean }) {
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   const apply = async () => {
     setState('sending');
     try {
-      const response = await fetch(`${browserApiBase}/applications`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ candidateId: 'candidate-1', jobId }) });
+      const response = await fetch(`${browserApiBase}/applications`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ candidateId: CURRENT_CANDIDATE_ID, jobId }) });
       if (!response.ok) throw new Error();
       setState('done');
     } catch { setState('error'); }
