@@ -5,8 +5,10 @@ import { useState } from 'react';
 import { browserApiBase } from '../lib/api';
 import { CURRENT_CANDIDATE_ID } from '../lib/current-candidate';
 
-export function ApplyButton({ jobId, compact = false }: { jobId: string; compact?: boolean }) {
-  const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
+const statusLabel: Record<string, string> = { submitted: 'Prijava poslata', reviewed: 'Prijava u pregledu', rejected: 'Prijava zatvorena', accepted: 'Prijava prihvaćena' };
+
+export function ApplyButton({ jobId, applicationStatus, compact = false }: { jobId: string; applicationStatus?: string | null; compact?: boolean }) {
+  const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>(applicationStatus ? 'done' : 'idle');
   const apply = async () => {
     setState('sending');
     try {
@@ -15,6 +17,6 @@ export function ApplyButton({ jobId, compact = false }: { jobId: string; compact
       setState('done');
     } catch { setState('error'); }
   };
-  if (state === 'done') return <span className="application-done"><CheckCircle2 size={16}/> Prijava poslata</span>;
+  if (state === 'done') return <span className="application-done"><CheckCircle2 size={16}/> {statusLabel[applicationStatus ?? 'submitted'] ?? 'Prijava evidentirana'}</span>;
   return <button className={`button primary ${compact ? 'compact-button' : ''}`} disabled={state === 'sending'} onClick={() => void apply()}><Send size={15}/> {state === 'sending' ? 'Slanje…' : state === 'error' ? 'Pokušaj ponovo' : 'Prijavi se'}</button>;
 }
