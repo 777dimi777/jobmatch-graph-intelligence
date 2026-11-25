@@ -1,13 +1,17 @@
 import { Body, Controller, forwardRef, Get, Injectable, Inject, NotFoundException, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { Neo4jService } from '../database/neo4j.service';
 import { hasSearchTerm } from './search-policy';
 
 class ApplyInput {
   @IsString() candidateId!: string;
   @IsString() jobId!: string;
-  @IsOptional() @IsString() coverNote?: string;
+  @IsOptional() @IsString() @MaxLength(1000) coverNote?: string;
+}
+
+export function normalizeCoverNote(value?: string): string {
+  return value?.trim() ?? '';
 }
 interface EngagementPort {
   apply(input: ApplyInput): Promise<unknown>;
@@ -49,7 +53,7 @@ export class EngagementService {
       MERGE (c)-[application:APPLIED_TO]->(j)
       ON CREATE SET application.id = 'application-' + $candidateId + '-' + $jobId, application.status = 'submitted', application.appliedAt = datetime(), application.coverNote = coalesce($coverNote, '')
       ON MATCH SET application.updatedAt = datetime(), application.coverNote = coalesce($coverNote, application.coverNote)
-      RETURN application { .id, .status, appliedAt: toString(application.appliedAt), coverNote: application.coverNote } AS application`, { ...input, coverNote: input.coverNote ?? '' }, (record) => record.get('application'));
+      RETURN application { .id, .status, appliedAt: toString(application.appliedAt), coverNote: application.coverNote } AS application`, { ...input, coverNote: normalizeCoverNote(input.coverNote) }, (record) => record.get('application'));
     if (!rows[0]) throw new NotFoundException('Kandidat ili aktivan posao nije pronadjen');
     return rows[0];
   }
